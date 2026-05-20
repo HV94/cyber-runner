@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cyber Runner 2099 - Modern Parkour Action | Valentyn Haidukov</title>
+  <meta name="description" content="Videogioco arcade 2D endless runner moderno a tema cyberpunk con animazioni vettoriali fluide, sound design procedurale in Web Audio API e fisica responsive a 60 FPS.">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="Cyber Runner 2099 - Modern Parkour Action">
+  <meta property="og:description" content="Salta, scivola e corri sui tetti della metropoli cibernetica nel gioco creato da Valentyn Haidukov.">
+  <meta property="og:image" content="anteprima.png">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts: Space Grotesk (Tech Modern) & Outfit (Clean Minimal) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- TOP BAR CON LINK PORTFOLIO -->
+  <header class="top-nav">
+    <div class="nav-brand">
+      <span class="pulse-dot"></span>
+      <span class="brand-title">CYBER RUNNER <strong>2099</strong></span>
+      <span class="brand-badge">Portfolio Project</span>
+    </div>
+    
+    <nav class="nav-links">
+      <a href="https://hv94.github.io/curriculum-vitae/" target="_blank" class="nav-btn btn-cv">
+        📄 CV Ufficiale
+      </a>
+      <a href="https://hv94.github.io/retail-store-catalog/" target="_blank" class="nav-btn">
+        🛒 RetailHub
+      </a>
+      <a href="https://hv94.github.io/tech-store-catalog/" target="_blank" class="nav-btn">
+        💻 TechStore
+      </a>
+      <a href="https://hv94.github.io/bookstore-catalog-manager/" target="_blank" class="nav-btn">
+        📚 BiblioTech
+      </a>
+    </nav>
+  </header>
+
+  <!-- CONTENITORE PRINCIPALE DI GIOCO -->
+  <main class="game-wrapper">
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+      <!-- HUD IN GIOCO (SOVRAPPOSTO AL CANVAS) -->
+      <div class="game-hud" id="gameHud">
+        <div class="hud-left">
+          <div class="hud-card">
+            <span class="hud-label">DISTANZA</span>
+            <span class="hud-val" id="hudDistance">0 m</span>
+          </div>
+          <div class="hud-card">
+            <span class="hud-label">CHIP DATI</span>
+            <span class="hud-val text-cyan" id="hudChips">0</span>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div class="active-powerup-bar" id="powerupBar" style="display: none;">
+            <span id="powerupIcon">⚡</span>
+            <span id="powerupName">OVERDRIVE TURBO</span>
+            <div class="powerup-meter">
+              <div class="powerup-fill" id="powerupFill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="hud-card">
+            <span class="hud-label">RECORD</span>
+            <span class="hud-val text-gold" id="hudBest">0 m</span>
+          </div>
+          <div class="hud-controls-quick">
+            <button class="icon-btn" id="audioToggleBtn" title="Audio On/Off" aria-label="Audio">
+              🔊
+            </button>
+            <button class="icon-btn" id="pauseBtn" title="Pausa" aria-label="Pausa">
+              ⏸️
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- OVERLAY: SCHERMATA START -->
+      <div class="overlay-screen active" id="startScreen">
+        <div class="modal-box">
+          <div class="modern-title">CYBER RUNNER <span class="title-gradient">2099</span></div>
+          <div class="modern-subtitle">PARKOUR RUNNER • VECTOR EDITION</div>
+          
+          <p class="intro-desc">
+            Attraversa i tetti della metropoli cibernetica con fluidità atletica. 
+            Salta le barriere al plasma, scivola sotto i droni di scansione e raccogli i frammenti di dati!
+          </p>
+
+          <div class="controls-guide-grid">
+            <div class="guide-item">
+              <div class="guide-badge">⬆️ [SPAZIO] / [SU]</div>
+              <strong>SALTO & DOPPIO SALTO</strong>
+              <small>Premi una volta per saltare, due per il salto acrobatico</small>
+            </div>
+            <div class="guide-item">
+              <div class="guide-badge">⬇️ [GIÙ]</div>
+              <strong>SCIVOLATA PARKOUR</strong>
+              <small>Scivola a terra sotto droni e raggi laser aerei</small>
+            </div>
+            <div class="guide-item">
+              <div class="guide-badge">🛡️ / ⚡</div>
+              <strong>POWER-UP</strong>
+              <small>Scudo protettivo a impulsi e Overdrive magnetico</small>
+            </div>
+          </div>
+
+          <button class="start-btn" id="startBtn">
+            <span>INIZIA LA CORSA</span>
+            <span class="btn-arrow">▶</span>
+          </button>
+          
+          <div class="mobile-hint">
+            📱 Su smartphone e tablet: tocca i pulsanti a schermo o fai swipe!
+          </div>
+        </div>
+      </div>
+
+      <!-- OVERLAY: SCHERMATA PAUSA -->
+      <div class="overlay-screen" id="pauseScreen">
+        <div class="modal-box compact">
+          <h2>PARTITA IN PAUSA</h2>
+          <p class="pause-desc">Prenditi un attimo prima di riprendere la corsa.</p>
+          <button class="start-btn" id="resumeBtn">
+            <span>RIPRENDI</span>
+            <span class="btn-arrow">▶</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- OVERLAY: SCHERMATA GAME OVER -->
+      <div class="overlay-screen" id="gameOverScreen">
+        <div class="modal-box">
+          <div class="gameover-title">CORSA CONCLUSA</div>
+          <p class="modern-subtitle" id="gameOverReason">Impatto con ostacolo di sicurezza</p>
+
+          <div class="stats-recap-grid">
+            <div class="recap-card">
+              <span class="recap-label">Distanza Percorsa</span>
+              <span class="recap-val" id="finalDistance">0 m</span>
+            </div>
+            <div class="recap-card">
+              <span class="recap-label">Chip Dati Raccolti</span>
+              <span class="recap-val text-cyan" id="finalChips">0</span>
+            </div>
+            <div class="recap-card highlight">
+              <span class="recap-label">Punteggio Totale</span>
+              <span class="recap-val text-cyan" id="finalScore">0 PTS</span>
+            </div>
+            <div class="recap-card">
+              <span class="recap-label">Record Personale</span>
+              <span class="recap-val text-gold" id="finalBest">0 m</span>
+            </div>
+          </div>
+
+          <div class="new-record-badge" id="newRecordBadge" style="display: none;">
+            🏆 NUOVO RECORD DI DISTANZA! 🏆
+          </div>
+
+          <button class="start-btn retry-btn" id="retryBtn">
+            <span>RIPROVA SUBITO</span>
+            <span class="btn-arrow">↺</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CONTROLLI TOUCH PER SMARTPHONE -->
+      <div class="touch-controls" id="touchControls">
+        <button class="touch-btn touch-slide" id="touchSlideBtn" aria-label="Scivola">
+          <span class="touch-icon">▼</span>
+          <span class="touch-text">SCIVOLA</span>
+        </button>
+        <button class="touch-btn touch-jump" id="touchJumpBtn" aria-label="Salta">
+          <span class="touch-icon">▲</span>
+          <span class="touch-text">SALTA</span>
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- INFO SUL PROGETTO PER RECRUITER -->
+  <section class="tech-spec-section">
+    <div class="spec-container">
+      <h3>Dettagli Tecnici del Progetto</h3>
+      <div class="spec-grid">
+        <div class="spec-card">
+          <h4>⚡ Motore Vettoriale HTML5 Canvas a 60 FPS</h4>
+          <p>Cinematica articolata del personaggio con ciclo di corsa anatomico, scia olografica e mantello a fisica inerziale continua.</p>
+        </div>
+        <div class="spec-card">
+          <h4>🔊 Sound Design Procedurale Web Audio API</h4>
+          <p>Tutti gli effetti sonori (salti, scivolate, campane pentatoniche sui chip e turbo) sono sintetizzati in tempo reale senza file esterni.</p>
+        </div>
+        <div class="spec-card">
+          <h4>🏙️ Sfondo con Parallasse Volumetrico</h4>
+          <p>Skyline generata a 4 livelli con aerovetture animate nel traffico aereo, nebbia di fondo e cartelloni olografici luminosi.</p>
+        </div>
+        <div class="spec-card">
+          <h4>📱 Mobile First & Game Feel Rifinito</h4>
+          <p>Tasti touch ergonomici, gesture swipe, coyote time e jump buffering per un controllo fluido e reattivo su ogni dispositivo.</p>
+        </div>
+      </div>
+      <div class="author-signature">
+        Progettato e sviluppato da <strong>Valentyn Haidukov</strong> • Perito Informatico (Categorie Protette L. 68/99)
+      </div>
+    </div>
+  </section>
+
+  <script src="game.js"></script>
+</body>
+</html>
