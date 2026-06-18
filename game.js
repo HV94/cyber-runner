@@ -8,6 +8,27 @@
   'use strict';
 
   // =========================================================================
+  // POLYFILL SICURO PER BROWSER SMARTPHONE (iOS / ANDROID WEBVIEW)
+  // =========================================================================
+  if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      const radius = typeof r === 'number' ? r : 6;
+      this.beginPath();
+      this.moveTo(x + radius, y);
+      this.lineTo(x + w - radius, y);
+      this.quadraticCurveTo(x + w, y, x + w, y + radius);
+      this.lineTo(x + w, y + h - radius);
+      this.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      this.lineTo(x + radius, y + h);
+      this.quadraticCurveTo(x, y + h, x, y + h - radius);
+      this.lineTo(x, y + radius);
+      this.quadraticCurveTo(x, y, x + radius, y);
+      this.closePath();
+      return this;
+    };
+  }
+
+  // =========================================================================
   // 1. PROCEDURAL SOUND ENGINE (WEB AUDIO API - ZERO LAG, ZERO FILE ESTERNI)
   // =========================================================================
   class ModernSoundEngine {
@@ -17,14 +38,18 @@
     }
 
     init() {
-      if (!this.ctx) {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-          this.ctx = new AudioCtx();
+      try {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+          }
         }
-      }
-      if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume();
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+      } catch (e) {
+        console.warn('Audio non inizializzato:', e);
       }
     }
 
@@ -34,146 +59,151 @@
       return this.isMuted;
     }
 
-    // Salto morbido e risonante (Smooth Sine Sweep)
     playJump() {
       if (this.isMuted || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.exponentialRampToValueAtTime(560, now + 0.12);
-
-      gain.gain.setValueAtTime(0.16, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.12);
-    }
-
-    // Doppio salto: impulso aereo con armonico superiore
-    playDoubleJump() {
-      if (this.isMuted || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      
-      const osc1 = this.ctx.createOscillator();
-      const osc2 = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(380, now);
-      osc1.frequency.exponentialRampToValueAtTime(840, now + 0.16);
-
-      osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(190, now);
-      osc2.frequency.exponentialRampToValueAtTime(420, now + 0.16);
-
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + 0.16);
-      osc2.stop(now + 0.16);
-    }
-
-    // Scivolata: fruscio sintetizzato filtrato (soft friction)
-    playSlide() {
-      if (this.isMuted || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const filter = this.ctx.createBiquadFilter();
-      const gain = this.ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(160, now);
-      osc.frequency.exponentialRampToValueAtTime(45, now + 0.22);
-
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(400, now);
-
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.22);
-    }
-
-    // Raccolta chip di dati: campane cristalline su scala pentatonica
-    playCrystalChime(combo = 0) {
-      if (this.isMuted || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      const scale = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; // C5, D5, E5, G5, A5, C6
-      const freq = scale[combo % scale.length];
-
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
-
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.28);
-    }
-
-    // Power-up raccolto (Accordo maggiore ascendente)
-    playPowerupFanfare() {
-      if (this.isMuted || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
-
-      notes.forEach((freq, idx) => {
+      try {
+        const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(560, now + 0.12);
 
-        gain.gain.setValueAtTime(0.12, now + idx * 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.25);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-
-        osc.start(now + idx * 0.05);
-        osc.stop(now + idx * 0.05 + 0.25);
-      });
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } catch (e) {}
     }
 
-    // Impatto o ostacolo rotto
+    playDoubleJump() {
+      if (this.isMuted || !this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(380, now);
+        osc1.frequency.exponentialRampToValueAtTime(840, now + 0.16);
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(190, now);
+        osc2.frequency.exponentialRampToValueAtTime(420, now + 0.16);
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.16);
+        osc2.stop(now + 0.16);
+      } catch (e) {}
+    }
+
+    playSlide() {
+      if (this.isMuted || !this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(45, now + 0.22);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(400, now);
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.22);
+      } catch (e) {}
+    }
+
+    playCrystalChime(combo = 0) {
+      if (this.isMuted || !this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const scale = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+        const freq = scale[combo % scale.length];
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      } catch (e) {}
+    }
+
+    playPowerupFanfare() {
+      if (this.isMuted || !this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const notes = [440, 554.37, 659.25, 880];
+
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+
+          gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.25);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now + idx * 0.05);
+          osc.stop(now + idx * 0.05 + 0.25);
+        });
+      } catch (e) {}
+    }
+
     playImpact() {
       if (this.isMuted || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      try {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
 
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(95, now);
-      osc.frequency.exponentialRampToValueAtTime(20, now + 0.3);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(95, now);
+        osc.frequency.exponentialRampToValueAtTime(20, now + 0.3);
 
-      gain.gain.setValueAtTime(0.24, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        gain.gain.setValueAtTime(0.24, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
 
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } catch (e) {}
     }
   }
 
@@ -188,22 +218,19 @@
 
       this.width = 960;
       this.height = 540;
-      this.groundY = 430; // Quota della pista maglev
+      this.groundY = 430;
 
-      this.state = 'START'; // START, PLAYING, PAUSED, GAMEOVER
+      this.state = 'START';
 
-      // Statistiche
       this.distance = 0;
       this.chipsCollected = 0;
       this.score = 0;
       this.bestDistance = parseInt(localStorage.getItem('cyber_runner_best') || '0', 10);
       
-      // Velocità iniziale accessibile e rilassante, con accelerazione molto graduale
       this.baseSpeed = 5.2;
       this.speed = this.baseSpeed;
       this.scrollX = 0;
 
-      // Giocatore: Cyber Parkour Athlete con cinematica articolata
       this.player = {
         x: 130,
         y: this.groundY - 72,
@@ -228,10 +255,9 @@
         coyoteTime: 0,
         jumpBuffer: 0,
         ghostTrail: [],
-        scarfNodes: [] // 6 nodi fisici per il mantello/sciarpa fotonica fluttuante
+        scarfNodes: []
       };
 
-      // Inizializza nodi per il mantello/sciarpa
       for (let i = 0; i < 7; i++) {
         this.player.scarfNodes.push({
           x: this.player.x - i * 8,
@@ -239,7 +265,6 @@
         });
       }
 
-      // Entità di gioco
       this.obstacles = [];
       this.chips = [];
       this.particles = [];
@@ -248,13 +273,11 @@
       this.spawnTimer = 60;
       this.comboTier = 0;
 
-      // Skyline procedurale moderna
       this.bgBuildings1 = [];
       this.bgBuildings2 = [];
       this.neonBillboards = [];
       this.initBackground();
 
-      // Riferimenti interfaccia UI
       this.ui = {
         startScreen: document.getElementById('startScreen'),
         pauseScreen: document.getElementById('pauseScreen'),
@@ -282,15 +305,10 @@
       this.bindEvents();
       this.updateHudBest();
 
-      // Loop di rendering a 60 FPS
       requestAnimationFrame(this.gameLoop.bind(this));
     }
 
-    // =======================================================================
-    // COSTRUZIONE AMBIENTE FUTURISTICO
-    // =======================================================================
     initBackground() {
-      // 1. Monoliti lontani (Parallasse lento)
       this.bgBuildings1 = [];
       for (let x = 0; x < 2000; x += Math.random() * 80 + 70) {
         this.bgBuildings1.push({
@@ -301,7 +319,6 @@
         });
       }
 
-      // 2. Grattacieli intermedi con griglie di finestre eleganti
       this.bgBuildings2 = [];
       for (let x = 0; x < 2000; x += Math.random() * 70 + 50) {
         this.bgBuildings2.push({
@@ -313,14 +330,12 @@
         });
       }
 
-      // 3. Traffico aereo nello skyline (Aerovetture volanti con scie di luce)
       this.skyTraffic = [
         { x: 100, y: 120, speed: -1.8, w: 24, color: '#38bdf8' },
         { x: 500, y: 170, speed: -2.4, w: 30, color: '#f43f5e' },
         { x: 800, y: 90, speed: -1.2, w: 20, color: '#38bdf8' }
       ];
 
-      // 4. Cartelloni olografici moderni (Minimal Vector)
       this.neonBillboards = [
         { x: 280, y: 140, text: 'VALENTYN', color: '#00f0ff' },
         { x: 780, y: 160, text: 'NEXUS 2099', color: '#38bdf8' },
@@ -329,14 +344,18 @@
     }
 
     // =======================================================================
-    // GESTIONE INPUT (TASTIERA PC & TOUCH MOBILE)
+    // GESTIONE EVENTI (DESKTOP + SMARTPHONE TOUCH MULTI-DEVICE)
     // =======================================================================
     bindEvents() {
-      // Tastiera: Frecce direzionali e Spazio
+      // 1. Tasti Tastiera PC
       window.addEventListener('keydown', (e) => {
         if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) {
           e.preventDefault();
-          this.triggerJump();
+          if (this.state === 'START') {
+            this.startGame();
+          } else {
+            this.triggerJump();
+          }
         } else if (['ArrowDown', 'KeyS'].includes(e.code)) {
           e.preventDefault();
           this.triggerSlide();
@@ -346,21 +365,54 @@
         }
       });
 
-      // Click / tocco diretto sul canvas per saltare
-      this.canvas.addEventListener('mousedown', (e) => {
-        if (this.state === 'PLAYING') {
-          this.triggerJump();
-        }
-      });
+      // Helper universale per pulsanti (funziona sia su click che su tocco touch immediato)
+      const bindBtnAction = (element, action) => {
+        if (!element) return;
+        const trigger = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          this.sound.init();
+          action();
+        };
+        element.addEventListener('click', trigger);
+        element.addEventListener('touchend', trigger);
+      };
 
-      // Touch Buttons
-      const addTouch = (elem, action) => {
+      // 2. Click / Tocco sui Pulsanti Schermata
+      bindBtnAction(this.ui.startBtn, () => this.startGame());
+      bindBtnAction(this.ui.resumeBtn, () => this.togglePause());
+      bindBtnAction(this.ui.retryBtn, () => this.startGame());
+      bindBtnAction(this.ui.pauseBtn, () => this.togglePause());
+
+      // Consentire di avviare il gioco toccando direttamente l'overlay dello start
+      if (this.ui.startScreen) {
+        this.ui.startScreen.addEventListener('click', (e) => {
+          if (this.state === 'START') {
+            this.sound.init();
+            this.startGame();
+          }
+        });
+        this.ui.startScreen.addEventListener('touchend', (e) => {
+          if (this.state === 'START') {
+            e.preventDefault();
+            this.sound.init();
+            this.startGame();
+          }
+        });
+      }
+
+      // 3. Pulsanti Touch a Schermo (Mobile)
+      const bindTouchCtrl = (elem, action) => {
         if (!elem) return;
         elem.addEventListener('touchstart', (e) => {
           e.preventDefault();
+          e.stopPropagation();
           this.sound.init();
           action();
         }, { passive: false });
+
         elem.addEventListener('mousedown', (e) => {
           e.preventDefault();
           this.sound.init();
@@ -368,31 +420,47 @@
         });
       };
 
-      addTouch(this.ui.touchJumpBtn, () => this.triggerJump());
-      addTouch(this.ui.touchSlideBtn, () => this.triggerSlide());
+      bindTouchCtrl(this.ui.touchJumpBtn, () => this.triggerJump());
+      bindTouchCtrl(this.ui.touchSlideBtn, () => this.triggerSlide());
 
-      // Gesture Swipe su mobile
+      // 4. Tocco Diretto sul Canvas & Gesture Swipe
       let touchStartY = 0;
       this.canvas.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 0) touchStartY = e.touches[0].clientY;
-      }, { passive: true });
-
-      this.canvas.addEventListener('touchend', (e) => {
-        if (e.changedTouches.length > 0) {
-          const dy = e.changedTouches[0].clientY - touchStartY;
-          if (dy < -30) this.triggerJump();
-          else if (dy > 30) this.triggerSlide();
+        this.sound.init();
+        if (this.state === 'START') {
+          this.startGame();
+          return;
+        }
+        if (e.touches && e.touches.length > 0) {
+          touchStartY = e.touches[0].clientY;
         }
       }, { passive: true });
 
-      // Pulsanti Menu
-      this.ui.startBtn.addEventListener('click', () => this.startGame());
-      this.ui.resumeBtn.addEventListener('click', () => this.togglePause());
-      this.ui.retryBtn.addEventListener('click', () => this.startGame());
-      this.ui.pauseBtn.addEventListener('click', () => this.togglePause());
+      this.canvas.addEventListener('touchend', (e) => {
+        if (this.state !== 'PLAYING') return;
+        if (e.changedTouches && e.changedTouches.length > 0) {
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          if (dy < -25) {
+            this.triggerJump();
+          } else if (dy > 25) {
+            this.triggerSlide();
+          } else {
+            // Tap rapido = Salto
+            this.triggerJump();
+          }
+        }
+      }, { passive: true });
 
-      this.ui.audioToggleBtn.addEventListener('click', () => {
-        this.sound.init();
+      this.canvas.addEventListener('mousedown', (e) => {
+        if (this.state === 'START') {
+          this.startGame();
+        } else if (this.state === 'PLAYING') {
+          this.triggerJump();
+        }
+      });
+
+      // 5. Pulsante Audio
+      bindBtnAction(this.ui.audioToggleBtn, () => {
         const muted = this.sound.toggleMute();
         this.ui.audioToggleBtn.textContent = muted ? '🔇' : '🔊';
       });
@@ -404,18 +472,15 @@
       }
     }
 
-    // Salto e doppio salto fluido con jump buffering
     triggerJump() {
       if (this.state !== 'PLAYING') return;
       this.sound.init();
 
-      // Se stava scivolando, annulla la scivolata ed esegui subito il salto parkour
       if (this.player.isSliding) {
         this.stopSlide();
       }
 
       if (this.player.isGrounded || this.player.coyoteTime > 0) {
-        // Primo salto
         this.player.vy = this.player.jumpPower;
         this.player.isGrounded = false;
         this.player.coyoteTime = 0;
@@ -423,19 +488,16 @@
         this.sound.playJump();
         this.addShockwave(this.player.x + 18, this.groundY, '#00f0ff', 24);
       } else if (this.player.jumpsLeft > 0) {
-        // Doppio salto con capriola frontale
         this.player.vy = this.player.doubleJumpPower;
         this.player.jumpsLeft = 0;
-        this.player.rotation = 0.1; // Avvia rotazione acrobatica
+        this.player.rotation = 0.1;
         this.sound.playDoubleJump();
         this.addShockwave(this.player.x + 18, this.player.y + 40, '#38bdf8', 28);
       } else {
-        // Salva nel buffer se tocca terra nei prossimi 6 frame
         this.player.jumpBuffer = 6;
       }
     }
 
-    // Scivolata dinamica a terra
     triggerSlide() {
       if (this.state !== 'PLAYING') return;
       this.sound.init();
@@ -448,7 +510,7 @@
         this.sound.playSlide();
 
         if (!this.player.isGrounded) {
-          this.player.vy = 12; // Scivolata immediata verso terra
+          this.player.vy = 12;
         }
       } else {
         this.player.slideTimer = this.player.slideMaxDuration;
@@ -476,9 +538,9 @@
       this.sound.init();
       this.state = 'PLAYING';
 
-      this.ui.startScreen.classList.remove('active');
-      this.ui.pauseScreen.classList.remove('active');
-      this.ui.gameOverScreen.classList.remove('active');
+      if (this.ui.startScreen) this.ui.startScreen.classList.remove('active');
+      if (this.ui.pauseScreen) this.ui.pauseScreen.classList.remove('active');
+      if (this.ui.gameOverScreen) this.ui.gameOverScreen.classList.remove('active');
 
       this.distance = 0;
       this.chipsCollected = 0;
@@ -499,7 +561,6 @@
       this.player.boostTimer = 0;
       this.player.ghostTrail = [];
 
-      // Ripristina mantello
       for (let i = 0; i < this.player.scarfNodes.length; i++) {
         this.player.scarfNodes[i].x = this.player.x - i * 8;
         this.player.scarfNodes[i].y = this.player.y + 20;
@@ -514,35 +575,31 @@
     }
 
     // =======================================================================
-    // LOGICA DI GIOCO & AGGIORNAMENTO FISICA
+    // AGGIORNAMENTO FISICA & LOGICA
     // =======================================================================
     update() {
       if (this.state !== 'PLAYING') return;
 
-      // Gestione Overdrive Turbo
       const isBoosting = this.player.boostTimer > 0;
       if (isBoosting) {
         this.player.boostTimer--;
         const pct = (this.player.boostTimer / this.player.boostMaxDuration) * 100;
-        this.ui.powerupFill.style.width = `${pct}%`;
-        if (this.player.boostTimer <= 0) {
+        if (this.ui.powerupFill) this.ui.powerupFill.style.width = `${pct}%`;
+        if (this.player.boostTimer <= 0 && this.ui.powerupBar) {
           this.ui.powerupBar.style.display = 'none';
         }
       }
 
-      // Velocità progressiva molto morbida (mai ingestibile)
       const targetSpeed = Math.min(8.6, this.baseSpeed + this.distance * 0.0012);
       this.speed = isBoosting ? targetSpeed * 1.45 : targetSpeed;
 
       this.scrollX += this.speed;
       this.distance = Math.floor(this.scrollX / 12);
 
-      // Fisica verticale e atterraggio
       if (!this.player.isGrounded) {
         this.player.vy += this.player.gravity;
         this.player.y += this.player.vy;
 
-        // Rotazione acrobatica del doppio salto
         if (this.player.rotation > 0) {
           this.player.rotation += 0.22;
           if (this.player.rotation >= Math.PI * 2) {
@@ -558,7 +615,6 @@
           this.player.isGrounded = true;
           this.player.jumpsLeft = 2;
 
-          // Se era stato memorizzato un salto nel buffer, eseguilo subito
           if (this.player.jumpBuffer > 0) {
             this.player.jumpBuffer = 0;
             this.triggerJump();
@@ -572,10 +628,8 @@
         this.player.jumpBuffer--;
       }
 
-      // Gestione Scivolata
       if (this.player.isSliding) {
         this.player.slideTimer--;
-        // Scintille di frizione radente sul pavimento
         if (Math.random() > 0.3) {
           this.particles.push({
             x: this.player.x + 8,
@@ -593,7 +647,6 @@
         }
       }
 
-      // Fisica della sciarpa fotonica (Verlet Integration)
       const collarX = this.player.x + 12;
       const collarY = this.player.y + 18;
       this.player.scarfNodes[0].x = collarX;
@@ -603,14 +656,12 @@
         const curr = this.player.scarfNodes[i];
         const prev = this.player.scarfNodes[i - 1];
 
-        // Gravità + vento contrario dovuto alla velocità
         const windX = -this.speed * 0.9;
         const waveY = Math.sin(this.player.animTime * 2.5 + i * 0.7) * 2;
         curr.x += (prev.x + windX - curr.x) * 0.55;
         curr.y += (prev.y + waveY + 1.2 - curr.y) * 0.45;
       }
 
-      // Scia Olografica Moderna (Motion Blur)
       if (Math.random() > 0.35 || isBoosting) {
         this.player.ghostTrail.unshift({
           x: this.player.x,
@@ -632,23 +683,19 @@
 
       this.player.animTime += 0.22;
 
-      // Spawn Ostacoli e Chip
       this.spawnEntities();
 
-      // Aggiorna Ostacoli
       for (let i = this.obstacles.length - 1; i >= 0; i--) {
         const obs = this.obstacles[i];
         obs.x -= this.speed;
 
         if (this.checkCollision(this.player, obs)) {
           if (this.player.boostTimer > 0) {
-            // Overdrive: vaporizza l'ostacolo
             this.addExplosion(obs.x + obs.w / 2, obs.y + obs.h / 2, '#fbbf24', 20);
             this.obstacles.splice(i, 1);
             this.sound.playImpact();
             continue;
           } else if (this.player.shield) {
-            // Scudo protettivo: assorbe il colpo
             this.player.shield = false;
             this.addShockwave(this.player.x + 18, this.player.y + 36, '#00f0ff', 36);
             this.obstacles.splice(i, 1);
@@ -665,13 +712,11 @@
         }
       }
 
-      // Aggiorna Cristalli / Chip Dati
       for (let i = this.chips.length - 1; i >= 0; i--) {
         const c = this.chips[i];
         c.x -= this.speed;
         c.rot = (c.rot || 0) + 0.04;
 
-        // Magnete dei cristalli durante l'Overdrive
         if (this.player.boostTimer > 0) {
           const dx = (this.player.x + 18) - c.x;
           const dy = (this.player.y + 36) - c.y;
@@ -688,9 +733,11 @@
               this.player.shield = true;
             } else {
               this.player.boostTimer = this.player.boostMaxDuration;
-              this.ui.powerupBar.style.display = 'flex';
-              this.ui.powerupName.textContent = 'OVERDRIVE TURBO';
-              this.ui.powerupFill.style.width = '100%';
+              if (this.ui.powerupBar) {
+                this.ui.powerupBar.style.display = 'flex';
+                this.ui.powerupName.textContent = 'OVERDRIVE TURBO';
+                this.ui.powerupFill.style.width = '100%';
+              }
             }
             this.sound.playPowerupFanfare();
             this.addShockwave(c.x, c.y, '#fbbf24', 30);
@@ -710,7 +757,6 @@
         }
       }
 
-      // Aggiorna particelle
       for (let i = this.particles.length - 1; i >= 0; i--) {
         const p = this.particles[i];
         p.x += p.vx;
@@ -719,7 +765,6 @@
         if (p.alpha <= 0) this.particles.splice(i, 1);
       }
 
-      // Aggiorna onde d'urto
       for (let i = this.shockwaves.length - 1; i >= 0; i--) {
         const sw = this.shockwaves[i];
         sw.radius += 2.6;
@@ -730,20 +775,15 @@
       this.updateHUD();
     }
 
-    // =======================================================================
-    // GENERATORE PROCEDURALE OSTACOLI & CRISTALLI
-    // =======================================================================
     spawnEntities() {
       this.spawnTimer--;
       if (this.spawnTimer <= 0) {
-        // Intervallo di spawn proporzionato alla velocità
         const gap = Math.max(65, 120 - Math.floor(this.distance / 140));
         this.spawnTimer = Math.floor(Math.random() * 30 + gap);
 
         const r = Math.random();
 
         if (r < 0.46) {
-          // OSTACOLO 1: Barriera al plasma energetica da terra (Richiede SALTO)
           this.obstacles.push({
             type: 'PLASMA_GATE',
             x: this.width + 40,
@@ -753,7 +793,6 @@
             color: '#00f0ff'
           });
         } else if (r < 0.78) {
-          // OSTACOLO 2: Drone Olografico aereo con raggio conico (Richiede SCIVOLATA)
           this.obstacles.push({
             type: 'DRONE_SCANNER',
             x: this.width + 40,
@@ -763,7 +802,6 @@
             color: '#38bdf8'
           });
         } else {
-          // OSTACOLO 3: Barriera pylon elettrificata
           this.obstacles.push({
             type: 'PYLON_FIELD',
             x: this.width + 40,
@@ -774,7 +812,6 @@
           });
         }
 
-        // Genera cristalli di dati o power-up
         this.spawnCrystals();
       }
     }
@@ -784,7 +821,6 @@
       const isHigh = Math.random() > 0.5;
       const spawnY = isHigh ? (this.groundY - 120) : (this.groundY - 38);
 
-      // 8% probabilità power-up
       if (Math.random() < 0.08) {
         const isShield = Math.random() > 0.5;
         this.chips.push({
@@ -798,7 +834,6 @@
         return;
       }
 
-      // Gruppo di 3 cristalli di dati
       for (let i = 0; i < 3; i++) {
         this.chips.push({
           x: spawnX + i * 34,
@@ -859,13 +894,13 @@
         this.updateHudBest();
       }
 
-      this.ui.finalDistance.textContent = `${this.distance} m`;
-      this.ui.finalChips.textContent = this.chipsCollected;
-      this.ui.finalScore.textContent = `${totalScore} PTS`;
-      this.ui.finalBest.textContent = `${this.bestDistance} m`;
-      this.ui.newRecordBadge.style.display = isNewBest ? 'block' : 'none';
+      if (this.ui.finalDistance) this.ui.finalDistance.textContent = `${this.distance} m`;
+      if (this.ui.finalChips) this.ui.finalChips.textContent = this.chipsCollected;
+      if (this.ui.finalScore) this.ui.finalScore.textContent = `${totalScore} PTS`;
+      if (this.ui.finalBest) this.ui.finalBest.textContent = `${this.bestDistance} m`;
+      if (this.ui.newRecordBadge) this.ui.newRecordBadge.style.display = isNewBest ? 'block' : 'none';
 
-      this.ui.gameOverScreen.classList.add('active');
+      if (this.ui.gameOverScreen) this.ui.gameOverScreen.classList.add('active');
     }
 
     // =======================================================================
@@ -875,7 +910,6 @@
       const ctx = this.ctx;
       ctx.clearRect(0, 0, this.width, this.height);
 
-      // 1. Cielo notturno profondo (Deep Obsidian to Dark Indigo)
       const skyGrad = ctx.createLinearGradient(0, 0, 0, this.height);
       skyGrad.addColorStop(0, '#040714');
       skyGrad.addColorStop(0.55, '#070f26');
@@ -883,22 +917,12 @@
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, this.width, this.height);
 
-      // 2. Parallasse: Traffico aereo nello sfondo
       this.renderSkyTraffic(ctx);
-
-      // 3. Parallasse Livello 1: Monoliti lontani
       this.renderDistantMonoliths(ctx);
-
-      // 4. Parallasse Livello 2: Skyline moderna con finestre
       this.renderMidSkyline(ctx);
-
-      // 5. Cartelloni Olografici Moderni
       this.renderHoloBillboards(ctx);
-
-      // 6. Pista Maglev Futuristica
       this.renderMaglevHighway(ctx);
 
-      // 7. Onde d'urto ad anello
       for (const sw of this.shockwaves) {
         ctx.save();
         ctx.strokeStyle = sw.color;
@@ -910,17 +934,14 @@
         ctx.restore();
       }
 
-      // 8. Ostacoli Moderni
       for (const obs of this.obstacles) {
         this.renderModernObstacle(ctx, obs);
       }
 
-      // 9. Cristalli di Dati Poligonali
       for (const c of this.chips) {
         this.renderDataCrystal(ctx, c);
       }
 
-      // 10. Particelle
       for (const p of this.particles) {
         ctx.save();
         ctx.globalAlpha = p.alpha;
@@ -931,7 +952,6 @@
         ctx.restore();
       }
 
-      // 11. Personaggio: Cyber Parkour Athlete con cinematica fluida
       this.renderRunnerAthlete(ctx);
     }
 
@@ -945,7 +965,6 @@
         ctx.globalAlpha = 0.6;
         ctx.fillRect(vehicle.x, vehicle.y, vehicle.w, 2.5);
 
-        // Scia di luce posteriore
         const trailGrad = ctx.createLinearGradient(vehicle.x + vehicle.w, vehicle.y, vehicle.x + vehicle.w + 40, vehicle.y);
         trailGrad.addColorStop(0, vehicle.color);
         trailGrad.addColorStop(1, 'transparent');
@@ -970,7 +989,6 @@
           ctx.fillStyle = b.color;
           ctx.fillRect(bx, by, b.w, b.h);
 
-          // Bordo superiore con tenue profilo luminescente
           ctx.strokeStyle = 'rgba(0, 240, 255, 0.12)';
           ctx.lineWidth = 1;
           ctx.strokeRect(bx, by, b.w, b.h);
@@ -994,7 +1012,6 @@
           ctx.fillStyle = b.color;
           ctx.fillRect(bx, by, b.w, b.h);
 
-          // Linea architettonica verticale
           ctx.strokeStyle = b.accent;
           ctx.globalAlpha = 0.25;
           ctx.lineWidth = 1.5;
@@ -1003,7 +1020,6 @@
           ctx.lineTo(bx + b.w / 2, by + b.h * 0.7);
           ctx.stroke();
 
-          // Griglia ordinata di finestre moderne
           ctx.fillStyle = b.accent;
           ctx.globalAlpha = 0.2;
           for (let wy = by + 20; wy < this.groundY - 15; wy += 26) {
@@ -1026,12 +1042,10 @@
         let bx = (bill.x - offset);
         if (bx < -200) bx += 1200;
 
-        // Cornice olografica moderna
         ctx.strokeStyle = bill.color;
         ctx.lineWidth = 1.5;
         ctx.strokeRect(bx, bill.y, 130, 32);
 
-        // Testo olografico
         ctx.font = "600 11px 'Space Grotesk', sans-serif";
         ctx.fillStyle = bill.color;
         ctx.textAlign = 'center';
@@ -1044,7 +1058,6 @@
     renderMaglevHighway(ctx) {
       ctx.save();
 
-      // Bordo laser superiore della pista
       ctx.strokeStyle = '#00f0ff';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -1052,14 +1065,12 @@
       ctx.lineTo(this.width, this.groundY);
       ctx.stroke();
 
-      // Manto scuro della carreggiata
       const trackGrad = ctx.createLinearGradient(0, this.groundY, 0, this.height);
       trackGrad.addColorStop(0, '#0a1022');
       trackGrad.addColorStop(1, '#040712');
       ctx.fillStyle = trackGrad;
       ctx.fillRect(0, this.groundY, this.width, this.height - this.groundY);
 
-      // Indicatori a freccia (Chevron) che scorrono fluidi
       ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
       ctx.lineWidth = 2;
       const chevronGap = 90;
@@ -1076,13 +1087,9 @@
       ctx.restore();
     }
 
-    // =======================================================================
-    // CINEMATICA VETTORIALE DEL RUNNER (ATLETA PARKOUR CON ARTI ARTICOLATI)
-    // =======================================================================
     renderRunnerAthlete(ctx) {
       const p = this.player;
 
-      // 1. Scia Olografica di movimento
       for (const g of p.ghostTrail) {
         ctx.save();
         ctx.globalAlpha = g.alpha * 0.35;
@@ -1101,7 +1108,6 @@
 
       ctx.save();
 
-      // Scudo protettivo (Sfera geometrica moderna)
       if (p.shield) {
         ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 2;
@@ -1110,14 +1116,12 @@
         ctx.stroke();
       }
 
-      // Aura Overdrive
       if (p.boostTimer > 0) {
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 2.5;
         ctx.strokeRect(p.x - 6, p.y - 4, p.width + 12, p.height + 8);
       }
 
-      // 2. Mantello/Sciarpa Fotonica Fluttuante (Physics Nodes)
       if (p.scarfNodes.length > 1) {
         ctx.save();
         ctx.strokeStyle = p.boostTimer > 0 ? '#fbbf24' : '#00f0ff';
@@ -1134,11 +1138,9 @@
       }
 
       if (p.isSliding) {
-        // --- POSE: SCIVOLATA PARKOUR A TERRA ---
         const sx = p.x;
         const sy = p.y;
 
-        // Corpo atletico affusolato e disteso
         ctx.fillStyle = '#0f172a';
         ctx.beginPath();
         ctx.roundRect(sx - 8, sy + 6, p.width + 26, p.height - 6, 8);
@@ -1148,12 +1150,10 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Visore olografico orizzontale
         ctx.fillStyle = '#00f0ff';
         ctx.fillRect(sx + p.width + 4, sy + 10, 10, 5);
 
       } else {
-        // --- POSE: CORSA O SALTO (CINEMATICA ARTICOLATA) ---
         ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
         if (p.rotation > 0) {
           ctx.rotate(p.rotation);
@@ -1163,10 +1163,8 @@
         const bounce = p.isGrounded ? Math.sin(p.animTime * 2) * 2.5 : 0;
         const px = p.x;
         const py = p.y + bounce;
-
         const cycle = p.isGrounded ? Math.sin(p.animTime * 2) : 0.5;
 
-        // Torso / Armatura leggera (leggermente inclinata in avanti)
         ctx.fillStyle = '#0f172a';
         ctx.beginPath();
         ctx.moveTo(px + 10, py + 18);
@@ -1180,7 +1178,6 @@
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Casco e Visore aerodinamico
         ctx.fillStyle = '#1e293b';
         ctx.beginPath();
         ctx.arc(px + 20, py + 12, 10, 0, Math.PI * 2);
@@ -1189,12 +1186,10 @@
         ctx.fillStyle = '#00f0ff';
         ctx.fillRect(px + 22, py + 8, 10, 4.5);
 
-        // Gambe articolate (Coscia + Stinco con flessione realistica del ginocchio)
         ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
 
-        // Gamba Anteriore
         const hip1X = px + 18;
         const hip1Y = py + 46;
         const knee1X = hip1X + cycle * 12;
@@ -1208,7 +1203,6 @@
         ctx.lineTo(foot1X, foot1Y);
         ctx.stroke();
 
-        // Gamba Posteriore
         const hip2X = px + 12;
         const hip2Y = py + 46;
         const knee2X = hip2X - cycle * 12;
@@ -1222,18 +1216,15 @@
         ctx.lineTo(foot2X, foot2Y);
         ctx.stroke();
 
-        // Braccia in sincronia opposta
         ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 2.5;
 
-        // Braccio Anteriore
         ctx.beginPath();
         ctx.moveTo(px + 18, py + 24);
         ctx.lineTo(px + 18 - cycle * 10, py + 34);
         ctx.lineTo(px + 18 - cycle * 14, py + 42);
         ctx.stroke();
 
-        // Bagliore di salto sotto gli stivali
         if (!p.isGrounded) {
           ctx.fillStyle = '#38bdf8';
           ctx.beginPath();
@@ -1245,26 +1236,20 @@
       ctx.restore();
     }
 
-    // =======================================================================
-    // OSTACOLI & CRISTALLI MODERNI (VECTOR DESIGN)
-    // =======================================================================
     renderModernObstacle(ctx, obs) {
       ctx.save();
 
       if (obs.type === 'PLASMA_GATE') {
-        // Piloni laterali con raggio al plasma verticale
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
         ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 1.5;
         ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
 
-        // Arco al plasma
         ctx.fillStyle = '#00f0ff';
         ctx.fillRect(obs.x + 8, obs.y + 4, obs.w - 16, obs.h - 8);
 
       } else if (obs.type === 'DRONE_SCANNER') {
-        // Drone aerodinamico moderno con raggio di scansione conico verso il basso
         const dy = obs.y + Math.sin(this.scrollX * 0.08) * 4;
 
         ctx.fillStyle = '#0f172a';
@@ -1273,13 +1258,11 @@
         ctx.strokeRect(obs.x, dy, obs.w, 18);
         ctx.fillRect(obs.x, dy, obs.w, 18);
 
-        // Sensore centrale
         ctx.fillStyle = '#f43f5e';
         ctx.beginPath();
         ctx.arc(obs.x + obs.w / 2, dy + 9, 3.5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Raggio laser conico di scansione
         const scanGrad = ctx.createLinearGradient(0, dy + 18, 0, dy + obs.h);
         scanGrad.addColorStop(0, 'rgba(244, 63, 94, 0.35)');
         scanGrad.addColorStop(1, 'rgba(244, 63, 94, 0.04)');
@@ -1293,7 +1276,6 @@
         ctx.fill();
 
       } else {
-        // Pylone con campo energetico viola
         ctx.fillStyle = '#111827';
         ctx.strokeStyle = '#8b5cf6';
         ctx.lineWidth = 1.5;
@@ -1309,7 +1291,6 @@
       const cy = c.y + Math.sin(this.scrollX * 0.1) * 3;
 
       if (c.isPowerup) {
-        // Sfera olografica moderna
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1321,7 +1302,6 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(c.powerType === 'SHIELD' ? '🛡️' : '⚡', c.x + 13, cy + 14);
       } else {
-        // Rombo di dati poligonale
         ctx.translate(c.x + 9, cy + 9);
         ctx.rotate(c.rot || 0);
 
@@ -1342,9 +1322,6 @@
       ctx.restore();
     }
 
-    // =======================================================================
-    // LOOP PRINCIPALE
-    // =======================================================================
     gameLoop() {
       this.update();
       this.render();
@@ -1352,9 +1329,6 @@
     }
   }
 
-  // =========================================================================
-  // AVVIO AL CARICAMENTO DOM
-  // =========================================================================
   window.addEventListener('DOMContentLoaded', () => {
     new ModernCyberRunner();
   });
