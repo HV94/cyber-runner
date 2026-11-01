@@ -296,14 +296,16 @@ body {
 .overlay-screen {
   position: absolute;
   inset: 0;
-  background: rgba(4, 7, 18, 0.85);
+  background: rgba(4, 7, 18, 0.88);
   backdrop-filter: blur(16px);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 20;
-  padding: 24px;
+  padding: 20px;
   text-align: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .overlay-screen.active {
@@ -317,16 +319,17 @@ body {
 }
 
 .modal-box {
-  background: rgba(13, 20, 38, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(13, 20, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.15);
   border-radius: 20px;
-  padding: 36px 40px;
-  max-width: 600px;
+  padding: 32px 36px;
+  max-width: 580px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin: auto;
 }
 
 .modal-box.compact {
@@ -356,7 +359,7 @@ body {
   font-weight: 600;
   letter-spacing: 2px;
   color: var(--accent-cyan);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   text-transform: uppercase;
 }
 
@@ -367,11 +370,11 @@ body {
 }
 
 .intro-desc {
-  font-size: 1rem;
+  font-size: 0.98rem;
   color: var(--text-muted);
-  margin-bottom: 24px;
+  margin-bottom: 22px;
   line-height: 1.6;
-  max-width: 520px;
+  max-width: 500px;
 }
 
 .controls-guide-grid {
@@ -379,7 +382,7 @@ body {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   width: 100%;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .guide-item {
@@ -436,6 +439,7 @@ body {
   gap: 12px;
   box-shadow: 0 4px 20px var(--accent-cyan-glow);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
 }
 
 .start-btn:hover {
@@ -459,9 +463,10 @@ body {
 }
 
 .mobile-hint {
-  margin-top: 18px;
-  font-size: 0.82rem;
-  color: var(--text-subtle);
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
 }
 
 /* GAMEOVER SPECIFIC */
@@ -478,7 +483,7 @@ body {
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   width: 100%;
-  margin: 20px 0 24px;
+  margin: 18px 0 22px;
 }
 
 .recap-card {
@@ -519,7 +524,7 @@ body {
   border: 1px solid rgba(251, 191, 36, 0.3);
   padding: 6px 14px;
   border-radius: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 /* ==========================================================================
@@ -538,34 +543,36 @@ body {
 
 .touch-btn {
   pointer-events: auto;
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
-  background: rgba(6, 10, 22, 0.65);
-  border: 1.5px solid rgba(0, 240, 255, 0.45);
-  backdrop-filter: blur(8px);
+  background: rgba(6, 10, 22, 0.75);
+  border: 2px solid rgba(0, 240, 255, 0.6);
+  backdrop-filter: blur(10px);
   color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 240, 255, 0.2);
   transition: transform 0.1s, background 0.1s;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .touch-btn:active {
   transform: scale(0.92);
-  background: rgba(0, 240, 255, 0.25);
+  background: rgba(0, 240, 255, 0.35);
   border-color: #ffffff;
 }
 
 .touch-slide {
-  border-color: rgba(139, 92, 246, 0.5);
+  border-color: rgba(139, 92, 246, 0.7);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(139, 92, 246, 0.2);
 }
 
 .touch-slide:active {
-  background: rgba(139, 92, 246, 0.25);
+  background: rgba(139, 92, 246, 0.35);
 }
 
 .touch-icon {
@@ -649,36 +656,74 @@ body {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN (OTTIMIZZATO PER SMARTPHONE)
    ========================================================================== */
 @media (max-width: 768px) {
   .top-nav {
     flex-direction: column;
-    gap: 10px;
-    padding: 10px 16px;
+    gap: 8px;
+    padding: 10px 14px;
   }
 
   .nav-links {
     width: 100%;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
     justify-content: flex-start;
   }
 
-  .modern-title {
-    font-size: 1.7rem;
+  .game-wrapper {
+    padding: 8px;
   }
 
-  .intro-desc {
-    font-size: 0.92rem;
+  .canvas-container {
+    aspect-ratio: auto;
+    height: 60vh;
+    min-height: 320px;
+    max-height: 500px;
+    border-radius: 12px;
   }
 
-  .controls-guide-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  .overlay-screen {
+    padding: 12px;
   }
 
   .modal-box {
-    padding: 24px 20px;
+    padding: 20px 16px;
+    max-width: 92%;
+    margin: auto;
+  }
+
+  .modern-title {
+    font-size: 1.6rem;
+  }
+
+  .modern-subtitle {
+    font-size: 0.72rem;
+    margin-bottom: 12px;
+  }
+
+  /* Nascondi il testo lungo e la guida tasti su smartphone per far risaltare subito il pulsante */
+  .intro-desc {
+    display: none;
+  }
+
+  .controls-guide-grid {
+    display: none;
+  }
+
+  .start-btn {
+    width: 100%;
+    max-width: 270px;
+    padding: 15px 24px;
+    font-size: 1.05rem;
+    justify-content: center;
+  }
+
+  .mobile-hint {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: var(--accent-cyan);
+    font-weight: 600;
   }
 }
