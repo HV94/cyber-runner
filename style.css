@@ -726,4 +726,40 @@ body {
     color: var(--accent-cyan);
     font-weight: 600;
   }
+  .gameover-title {
+    font-size: 1.5rem;
+  }
+
+  .stats-recap-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 8px 0 12px;
+  }
+
+  .recap-card {
+    padding: 8px 10px;
+    border-radius: 8px;
+  }
+
+  .recap-label {
+    font-size: 0.65rem;
+  }
+
+  .recap-val {
+    font-size: 1.15rem;
+  }
+
+  .new-record-badge {
+    font-size: 0.78rem;
+    padding: 4px 10px;
+    margin-bottom: 12px;
+  }
+
+  .retry-btn {
+    width: 100%;
+    max-width: 270px;
+    padding: 15px 24px;
+    font-size: 1.05rem;
+    justify-content: center;
+  }
 }

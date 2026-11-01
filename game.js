@@ -351,7 +351,7 @@
       window.addEventListener('keydown', (e) => {
         if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) {
           e.preventDefault();
-          if (this.state === 'START') {
+          if (this.state === 'START' || this.state === 'GAMEOVER') {
             this.startGame();
           } else {
             this.triggerJump();
@@ -389,13 +389,30 @@
       // Consentire di avviare il gioco toccando direttamente l'overlay dello start
       if (this.ui.startScreen) {
         this.ui.startScreen.addEventListener('click', (e) => {
-          if (this.state === 'START') {
+          if (this.state === 'START' || this.state === 'GAMEOVER') {
             this.sound.init();
             this.startGame();
           }
         });
         this.ui.startScreen.addEventListener('touchend', (e) => {
-          if (this.state === 'START') {
+          if (this.state === 'START' || this.state === 'GAMEOVER') {
+            e.preventDefault();
+            this.sound.init();
+            this.startGame();
+          }
+        });
+      }
+
+      // Riavvio rapido al tocco dell'overlay di Game Over
+      if (this.ui.gameOverScreen) {
+        this.ui.gameOverScreen.addEventListener('click', (e) => {
+          if (this.state === 'GAMEOVER') {
+            this.sound.init();
+            this.startGame();
+          }
+        });
+        this.ui.gameOverScreen.addEventListener('touchend', (e) => {
+          if (this.state === 'GAMEOVER') {
             e.preventDefault();
             this.sound.init();
             this.startGame();
