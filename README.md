@@ -1,55 +1,47 @@
-# Cyber Runner 2099 - Neon Escape ⚡
+# Cyber Runner - Videogioco Arcade 2D in JavaScript Canvas
 
-Un videogioco arcade 2D endless runner a tema Cyberpunk, sviluppato interamente in JavaScript puro (Vanilla ES6+) con HTML5 Canvas e Web Audio API nativa.
+Videogioco arcade a scorrimento orizzontale (endless runner), sviluppato interamente in JavaScript vanilla su HTML5 Canvas e Web Audio API.
 
-🎮 **Demo Giocabile Online**: [https://hv94.github.io/cyber-runner/](https://hv94.github.io/cyber-runner/)
-
----
-
-## 🌟 Caratteristiche Principali
-
-- **Rendering a 60 FPS con Parallax Scrolling**:
-  - Sfondo dinamico a 4 livelli (cielo stellato digitale, skyline di grattacieli con finestre illuminate e antenne, autostrade aeree con veicoli in transito, pavimento a griglia neon prospettica).
-- **Fisica & Controlli Fluidi**:
-  - Meccanica di **Salto** e **Doppio Salto** con particelle propulsori a reazione.
-  - Meccanica di **Scivolata** con riduzione della hitbox (hitbox detection dinamica) e scintille da attrito sul suolo.
-- **Audio Procedurale Nativo (Web Audio API)**:
-  - Tutti i suoni (salti, scivolate, raccolta chip di memoria, power-up ed esplosioni) sono generati sinteticamente tramite oscillatori audio del browser. Zero dipendenze da file audio esterni pesanti o lenti da caricare.
-- **Mobile First & Touch Ready**:
-  - Controlli touch ergonomici su schermo (tasti dedicati Salto e Scivolata).
-  - Supporto gesture **Swipe Up** (Salto) e **Swipe Down** (Scivolata) con prevenzione dello scrolling nativo del browser.
-- **Power-up e Progressione**:
-  - **Scudo Protettivo (🛡️)**: assorbe 1 collisione evitando il Game Over.
-  - **Overdrive Turbo (⚡)**: velocità aumentata, invincibilità temporanea e magnete automatico per i chip dati.
-  - Salvataggio del Record Personale in `localStorage`.
+Demo online giocabile: [https://hv94.github.io/cyber-runner/](https://hv94.github.io/cyber-runner/)
 
 ---
 
-## 🕹️ Comandi di Gioco
+## Descrizione del progetto
 
-| Azione | Tastiera PC | Smartphone & Tablet |
+Il progetto è nato come esercitazione pratica di programmazione per approfondire la gestione di un motore grafico 2D nel browser, la gestione degli eventi in tempo reale e la sintesi sonora via codice senza l'utilizzo di librerie o framework esterni.
+
+Obiettivi tecnici affrontati:
+- Ciclo di animazione a 60 FPS basato su `requestAnimationFrame` con calcolo del delta time per garantire fluidità costante indipendentemente dal dispositivo.
+- Gestione della fisica del personaggio (gravità, accelerazione, attrito, salto, doppio salto e scivolata).
+- Sistema di rilevamento delle collisioni basato su assi ortogonali (AABB - Axis-Aligned Bounding Box) con adattamento dinamico dell'ingombro durante la scivolata.
+- Sfondo a più livelli con effetto parallasse (scorrimento differenziato a velocità scalari) per dare profondità alla scena.
+- Generazione sintetica del sonoro tramite Web Audio API nativa (`AudioContext`, `OscillatorNode`, `GainNode`) per generare salti, impatti e bonus senza dover caricare file audio esterni.
+- Controlli ibridi: tastiera per postazioni desktop (frecce direzionali / WASD) e pulsanti touch / gesture di scorrimento (swipe) per smartphone e tablet.
+- Salvataggio del punteggio record nel browser tramite `localStorage`.
+
+---
+
+## Comandi di gioco
+
+| Azione | Tastiera (PC / Desktop) | Schermo Touch (Smartphone / Tablet) |
 |---|---|---|
-| **Salto / Doppio Salto** | `Spazio`, `Freccia Su` o `W` | Tasto touch **SALTA [▲]** o **Swipe In Alto** |
-| **Scivolata** | `Freccia Giù` o `S` | Tasto touch **SCIVOLA [▼]** o **Swipe In Basso** |
-| **Pausa** | `P` o `Esc` | Icona Pausa in alto a destra |
-| **Audio ON/OFF** | Icona Audio | Icona Audio |
+| Salto / Doppio Salto | Spazio, Freccia Su, W | Pulsante Salta [▲] o scorrimento verso l'alto |
+| Scivolata | Freccia Giù, S | Pulsante Scivola [▼] o scorrimento verso il basso |
+| Pausa | P o Esc | Pulsante Pausa a schermo |
+| Audio On / Off | Icona volume | Icona volume |
 
 ---
 
-## 🛠️ Stack Tecnologico
+## Note tecniche e sviluppo
 
-- **Frontend**: HTML5 semantico, CSS3 Modern Flexbox/Grid con variabili CSS e filtri Backdrop Blur.
-- **Logica & Motore Grafico**: JavaScript (Vanilla ES6+) orientato a oggetti, Canvas 2D API (`requestAnimationFrame`).
-- **Audio**: Web Audio API (`AudioContext`, `OscillatorNode`, `GainNode`).
-- **Testing & Compatibilità**: Testato e ottimizzato per Google Chrome, Safari, Firefox ed Edge (Desktop & Mobile).
+- **Linguaggi**: HTML5, CSS3, JavaScript ES6+ (senza dipendenze esterne).
+- **Grafica**: Canvas 2D nativo del browser.
+- **Audio**: Web Audio API standard W3C.
+- **Supporto AI**: bozza iniziale dell'algoritmo di movimento e della palette cromatica generata con l'ausilio di assistenti AI, successivamente personalizzata, rifinita nei controlli touch e testata su dispositivi reali.
 
 ---
 
-## 👨‍💻 Autore
-
-**Valentyn Haidukov**  
-Perito Informatico e delle Telecomunicazioni  
-Iscritto alle Categorie Protette (L. 68/99)  
-- **CV Interattivo**: [https://hv94.github.io/curriculum-vitae/](https://hv94.github.io/curriculum-vitae/)
-- **LinkedIn**: [https://www.linkedin.com/in/valentyn-haidukov/](https://www.linkedin.com/in/valentyn-haidukov/)
-- **GitHub**: [@HV94](https://github.com/HV94)
+**Autore**: Valentyn Haidukov  
+Perito Informatico e Telecomunicazioni • Categorie Protette (L. 68/99)  
+- Portfolio e CV: [https://hv94.github.io/curriculum-vitae/](https://hv94.github.io/curriculum-vitae/)  
+- Profilo GitHub: [@HV94](https://github.com/HV94)
