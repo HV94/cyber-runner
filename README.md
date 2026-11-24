@@ -36,8 +36,8 @@ Obiettivi tecnici affrontati:
 
 - **Linguaggi**: HTML5, CSS3, JavaScript ES6+ (senza dipendenze esterne).
 - **Grafica**: Canvas 2D nativo del browser.
-- **Audio**: Web Audio API standard W3C.
-- **Supporto AI**: bozza iniziale dell'algoritmo di movimento e della palette cromatica generata con l'ausilio di assistenti AI, successivamente personalizzata, rifinita nei controlli touch e testata su dispositivi reali.
+- **Audio**: Web Audio API standard W3C (sintesi sonora in tempo reale).
+- **Compatibilità**: responsive per desktop e dispositivi mobili.
 
 ---
 
